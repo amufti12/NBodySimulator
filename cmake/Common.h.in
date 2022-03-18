@@ -1,0 +1,48 @@
+// clang-format off
+#ifndef NBS_COMMON_H_
+#define NBS_COMMON_H_
+
+// NBS version info
+#define NBS_VERSION_MAJOR @NBS_VERSION_MAJOR@
+#define NBS_VERSION_MINOR @NBS_VERSION_MINOR@
+#define NBS_VERSION_PATCH @NBS_VERSION_PATCH@
+#define NBS_VERSION_STR "@NBS_VERSION_STR@"
+
+// Platform defines
+#if @NBS_PLATFORM_WIN32@
+#define NBS_PLATFORM_WINDOWS 1
+#elif @NBS_PLATFORM_APPLE@
+#define NBS_PLATFORM_MACOS 1
+#elif @NBS_PLATFORM_LINUX@
+#define NBS_PLATFORM_LINUX 1
+#endif
+
+// clang-format on
+
+#if defined(NBS_PLATFORM_WINDOWS)
+#define DEBUG_BREAK __debugbreak()
+#else
+#define DEBUG_BREAK asm(int 3)
+#endif
+
+#define NBS_UNUSED(x) (void)(x)
+
+// Typedefs
+#include <cstdint>
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+
+typedef bool b32;
+
+typedef float f32;
+typedef double f64;
+
+#endif
