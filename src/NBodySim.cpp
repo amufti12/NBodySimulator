@@ -79,8 +79,6 @@ std::vector<vec3> VecF32TimeVecVec3(const std::vector<float>& f, const std::vect
   return resultVec;
 }
 
-// computing the quotient of a vector of vec3 and vector of floats
-
 // computes the mean of a vector of vec3 and returns a vec3
 vec3 MeanOfVecVec3(const std::vector<vec3>& v)
 {
