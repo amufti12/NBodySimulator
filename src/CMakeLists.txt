@@ -10,5 +10,6 @@ target_compile_options(NBodySim PRIVATE ${NBS_CXX_FLAGS})
 target_compile_definitions(NBodySim PRIVATE -D_CRT_SECURE_NO_WARNINGS)
 target_include_directories(NBodySim PRIVATE 
   ${NBS_ROOT_BUILD_DIR}/config
+  ${NBS_ROOT_DIR}/thirdparty/eigen-3.4.0
   ${CMAKE_CURRENT_SOURCE_DIR}
 )

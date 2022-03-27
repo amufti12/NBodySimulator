@@ -34,4 +34,6 @@ set(NBS_VERSION_STR "0.1.0")
 configure_file("${NBS_ROOT_DIR}/cmake/Common.h.in"
                "${NBS_ROOT_BUILD_DIR}/config/Common.h")
 
+add_subdirectory(thirdparty/eigen-3.4.0)
+
 add_subdirectory(src)

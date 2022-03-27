@@ -22,7 +22,7 @@ set(NBS_CXX_BASE_FLAGS)
 if(${NBS_MSVC})
   # Disabled warnings for MSVC take the form /wd####
   # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=msvc-170
-  set(NBS_CXX_DISABLED_WARNINGS)
+  set(NBS_CXX_DISABLED_WARNINGS /wd5054 /wd4127)
   set(NBS_CXX_BASE_FLAGS /W4 ${NBS_CXX_DISABLED_WARNINGS} /WX)
 else()
   # Disabled warnings for any variant of clang/gcc take the form -Wno-blah
