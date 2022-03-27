@@ -23,17 +23,83 @@ std::vector<Eigen::Vector3f> getAcc(const Eigen::MatrixX3f& pos,
                                     float G,
                                     float softening)
 {
-  auto N = pos.size();
-  auto a = std::vector<Eigen::Vector3f>(N);
+  UNUSED(mass);
+  UNUSED(G);
+  UNUSED(softening);
 
-    for (int i = 0; i < N; i++) {
+  // auto N = pos.size();
+  /*
+  Eigen::MatrixXf zeros = Eigen::MatrixXf::Zero(pos.rows(), 1);
+
+  std::cout << "xStuff:\n"
+            << pos(Eigen::all, 0) << "\nyStuff:\n"
+            << pos(Eigen::all, 1) << "\nzStuff:\n"
+            << pos(Eigen::all, 2) << std::endl;
+
+  Eigen::MatrixX3f x(pos.rows(), 3);
+  x << pos(Eigen::all, 0), zeros, zeros;
+  Eigen::MatrixX3f y(pos.rows(), 3);
+  y << zeros, pos(Eigen::all, 1), zeros;
+  Eigen::MatrixX3f z(pos.rows(), 3);
+  z << zeros, zeros, pos(Eigen::all, 2);
+
+  std::cout << "X:\n" << x << "\nY:\n" << y << "\nZ:\n" << z << std::endl;
+
+  std::cout << "HERE" << std::endl;
+  std::cout << "x:\n" << x << "\ny:\n" << y << "\nz:\n" << z << std::endl;
+  std::cout << "xT:\n"
+            << x.transpose() << "\nyT:\n"
+            << y.transpose() << "\nzT:\n"
+            << z.transpose() << std::endl;
+
+  auto dX = x.transpose() - x;
+  auto dY = y.transpose() - y;
+  auto dZ = z.transpose() - z;
+  */
+
+  Eigen::MatrixXf x = pos.col(0);
+  Eigen::MatrixXf y = pos.col(1);
+  Eigen::MatrixXf z = pos.col(2);
+
+  std::cout << "X:\n" << x << "\nY:\n" << y << "\nZ:\n" << z << std::endl;
+
+  Eigen::MatrixXf xT = x.transpose();
+  Eigen::MatrixXf yT = y.transpose();
+  Eigen::MatrixXf zT = z.transpose();
+
+  std::cout << "xT:\n" << xT << "\nyT:\n" << yT << "\nzT:\n" << zT << std::endl;
+
+  Eigen::MatrixXf xTR = xT.replicate(pos.rows(), 1);
+  Eigen::MatrixXf yTR = yT.replicate(pos.rows(), 1);
+  Eigen::MatrixXf zTR = zT.replicate(pos.rows(), 1);
+
+  std::cout << "xTR:\n" << xTR << "\nyTR:\n" << yTR << "\nzTR:\n" << zTR << std::endl;
+
+  Eigen::MatrixXf dX = xTR - x.colwise();
+  Eigen::MatrixXf dY = yTR - y.colwise();
+  Eigen::MatrixXf dZ = zTR - z.colwise();
+
+  std::cout << "dX:\n" << dX << "\ndY:\n" << dY << "\ndZ:\n" << dZ << std::endl;
+
+  /*
+  auto dX = x.transpose().replicate(pos.rows(), 1) - x.colwise();
+  auto dY = y.transpose().replicate(pos.rows(), 1) - y.colwise();
+  auto dZ = z.transpose().replicate(pos.rows(), 1) - z.colwise();
+  */
+
+  // std::cout << "dX:\n" << dX << "\ndY:\n" << dY << "\ndZ:\n" << dZ << std::endl;
+
+  /*
+
+  for (int i = 0; i < N; i++) {
     for (int j = 0; j < N; j++) {
       Eigen::Vector3f dVec = pos[j] - pos[i];
       auto inv_r3 = powf((exp2f(dVec(0)) + exp2f(dVec(1)) + exp2f(dVec(2)) + exp2f(softening)), -1.5f);
       a[i] += G * (dVec * inv_r3) * mass[j];
     }
   }
-  return a;
+  */
+  return {};
 }
 
 // Energy Calculation
