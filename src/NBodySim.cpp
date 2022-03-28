@@ -16,90 +16,45 @@ C++ implementation of gravitational N-Body Problem
 
 #define UNUSED(x) (void)(x)
 
+constexpr const int N = 1000;
+
 // Force Calculation
 // - Each particle reacts to other particles graviational attraction -> Newton's law of universal gravitation
-std::vector<Eigen::Vector3f> getAcc(const Eigen::MatrixX3f& pos,
-                                    const Eigen::VectorXf& mass,
-                                    float G,
-                                    float softening)
+Eigen::MatrixXf getAcc(const Eigen::MatrixX3f& pos, const Eigen::VectorXf& mass, float G, float softening)
 {
-  UNUSED(mass);
-  UNUSED(G);
-  UNUSED(softening);
-
-  // auto N = pos.size();
-  /*
-  Eigen::MatrixXf zeros = Eigen::MatrixXf::Zero(pos.rows(), 1);
-
-  std::cout << "xStuff:\n"
-            << pos(Eigen::all, 0) << "\nyStuff:\n"
-            << pos(Eigen::all, 1) << "\nzStuff:\n"
-            << pos(Eigen::all, 2) << std::endl;
-
-  Eigen::MatrixX3f x(pos.rows(), 3);
-  x << pos(Eigen::all, 0), zeros, zeros;
-  Eigen::MatrixX3f y(pos.rows(), 3);
-  y << zeros, pos(Eigen::all, 1), zeros;
-  Eigen::MatrixX3f z(pos.rows(), 3);
-  z << zeros, zeros, pos(Eigen::all, 2);
-
-  std::cout << "X:\n" << x << "\nY:\n" << y << "\nZ:\n" << z << std::endl;
-
-  std::cout << "HERE" << std::endl;
-  std::cout << "x:\n" << x << "\ny:\n" << y << "\nz:\n" << z << std::endl;
-  std::cout << "xT:\n"
-            << x.transpose() << "\nyT:\n"
-            << y.transpose() << "\nzT:\n"
-            << z.transpose() << std::endl;
-
-  auto dX = x.transpose() - x;
-  auto dY = y.transpose() - y;
-  auto dZ = z.transpose() - z;
-  */
-
   Eigen::MatrixXf x = pos.col(0);
   Eigen::MatrixXf y = pos.col(1);
   Eigen::MatrixXf z = pos.col(2);
-
-  std::cout << "X:\n" << x << "\nY:\n" << y << "\nZ:\n" << z << std::endl;
 
   Eigen::MatrixXf xT = x.transpose();
   Eigen::MatrixXf yT = y.transpose();
   Eigen::MatrixXf zT = z.transpose();
 
-  std::cout << "xT:\n" << xT << "\nyT:\n" << yT << "\nzT:\n" << zT << std::endl;
+  Eigen::MatrixXf xTR = xT.replicate(x.rows(), 1);
+  Eigen::MatrixXf yTR = yT.replicate(y.rows(), 1);
+  Eigen::MatrixXf zTR = zT.replicate(z.rows(), 1);
 
-  Eigen::MatrixXf xTR = xT.replicate(pos.rows(), 1);
-  Eigen::MatrixXf yTR = yT.replicate(pos.rows(), 1);
-  Eigen::MatrixXf zTR = zT.replicate(pos.rows(), 1);
+  Eigen::MatrixXf dX = xTR - x.replicate(1, xTR.cols());
+  Eigen::MatrixXf dY = yTR - y.replicate(1, yTR.cols());
+  Eigen::MatrixXf dZ = zTR - z.replicate(1, zTR.cols());
 
-  std::cout << "xTR:\n" << xTR << "\nyTR:\n" << yTR << "\nzTR:\n" << zTR << std::endl;
+  Eigen::MatrixXf dX2 = dX.array().pow(2);
+  Eigen::MatrixXf dY2 = dY.array().pow(2);
+  Eigen::MatrixXf dZ2 = dZ.array().pow(2);
+  Eigen::MatrixXf softening2 = (Eigen::MatrixXf::Ones(dX.rows(), dX.cols()) * softening).array().pow(2);
 
-  Eigen::MatrixXf dX = xTR - x.colwise();
-  Eigen::MatrixXf dY = yTR - y.colwise();
-  Eigen::MatrixXf dZ = zTR - z.colwise();
+  Eigen::MatrixXf inv_r3 = (dX2 + dY2 + dZ2 + softening2);
 
-  std::cout << "dX:\n" << dX << "\ndY:\n" << dY << "\ndZ:\n" << dZ << std::endl;
+  inv_r3 = (inv_r3.array() > 0.0f).select(inv_r3.array().pow(-1.5), inv_r3);
 
-  /*
-  auto dX = x.transpose().replicate(pos.rows(), 1) - x.colwise();
-  auto dY = y.transpose().replicate(pos.rows(), 1) - y.colwise();
-  auto dZ = z.transpose().replicate(pos.rows(), 1) - z.colwise();
-  */
+  Eigen::MatrixXf aX = (G * (dX * inv_r3)) * mass;
+  Eigen::MatrixXf aY = (G * (dY * inv_r3)) * mass;
+  Eigen::MatrixXf aZ = (G * (dZ * inv_r3)) * mass;
 
-  // std::cout << "dX:\n" << dX << "\ndY:\n" << dY << "\ndZ:\n" << dZ << std::endl;
+  Eigen::MatrixXf resultVector(aX.rows(), aX.cols() + aY.cols() + aZ.cols());
+  resultVector << aX, aY, aZ;
 
-  /*
-
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < N; j++) {
-      Eigen::Vector3f dVec = pos[j] - pos[i];
-      auto inv_r3 = powf((exp2f(dVec(0)) + exp2f(dVec(1)) + exp2f(dVec(2)) + exp2f(softening)), -1.5f);
-      a[i] += G * (dVec * inv_r3) * mass[j];
-    }
-  }
-  */
-  return {};
+  return resultVector;
 }
 
 // Energy Calculation
@@ -109,8 +64,6 @@ int main(int /*argc*/, char** /*argv*/)
   srand((unsigned int)time(NULL));
   std::cout << "Hello World" << std::endl;
 
-  // Simulation Parameters
-  constexpr int N = 10;
   // Number of particles
   int t = 0;                 // Current Time of the Simulation
   float tEnd = 10.0f;        // Time at which simulation ends

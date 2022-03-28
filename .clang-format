@@ -1,0 +1,7 @@
+BasedOnStyle: Mozilla
+IndentWidth: 2
+Language: Cpp
+PointerAlignment: Left
+ColumnLimit: 110
+AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
