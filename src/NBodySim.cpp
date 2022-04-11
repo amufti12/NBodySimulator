@@ -29,7 +29,7 @@ C++ implementation of gravitational N-Body Problem
 
 #define UNUSED(x) (void)(x)
 
-constexpr const int N = 100;
+constexpr const int N = 256;
 uint32_t width = 1280;
 uint32_t height = 720;
 
@@ -166,7 +166,6 @@ void drawScatter(Eigen::MatrixX3f& pos)
 int main(int /*argc*/, char** /*argv*/)
 {
   srand((unsigned int)time(NULL));
-  std::cout << "Hello World" << std::endl;
 
   // Number of particles
   float t = 0.0f;            // Current Time of the Simulation
