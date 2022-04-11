@@ -34,4 +34,7 @@ set(NBS_VERSION_STR "0.1.0")
 configure_file("${NBS_ROOT_DIR}/cmake/Common.h.in"
                "${NBS_ROOT_BUILD_DIR}/config/Common.h")
 
+find_package(OpenGL REQUIRED)
+
+add_subdirectory(thirdparty/glfw)
 add_subdirectory(src)

@@ -16,9 +16,22 @@ C++ implementation of gravitational N-Body Problem
 #include <utility>
 #include <vector>
 
+#include <imgui.h>
+
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+
+#include <implot.h>
+
+#include <glad/glad.h>
+
+#include <GLFW/glfw3.h>
+
 #define UNUSED(x) (void)(x)
 
 constexpr const int N = 100;
+uint32_t width = 1280;
+uint32_t height = 720;
 
 // Force Calculation
 // - Each particle reacts to other particles graviational attraction -> Newton's law of universal gravitation
@@ -127,6 +140,29 @@ void recordPosAtTime(Eigen::MatrixXf& pos_save, const Eigen::MatrixXf& pos, int 
   pos_save.block<N * 3, 1>(0, timeIndex) = tempMap;
 }
 
+void drawScatter(Eigen::MatrixX3f& pos)
+{
+  // separate x's and y's into arrays of floats
+  float* xdata = pos.col(0).data();
+  float* ydata = pos.col(1).data();
+
+  float aspect_ratio = (float)height / (float)width;
+
+  // draw
+  if (ImPlot::BeginPlot("Scatter Plot",
+                        ImVec2((float)width - 20, (float)height - 40),
+                        ImPlotFlags_CanvasOnly | ImPlotFlags_NoInputs)) {
+    ImPlot::SetupAxisLimits(ImAxis_X1, -5, 5);
+    ImPlot::SetupAxisLimits(ImAxis_Y1, -5 * aspect_ratio, 5 * aspect_ratio);
+    ImPlot::PlotScatter("Positions", xdata, ydata, N);
+    ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+    ImPlot::SetNextMarkerStyle(
+      ImPlotMarker_Circle, 6, ImPlot::GetColormapColor(1), IMPLOT_AUTO, ImPlot::GetColormapColor(1));
+    ImPlot::PopStyleVar();
+    ImPlot::EndPlot();
+  }
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
   srand((unsigned int)time(NULL));
@@ -149,8 +185,50 @@ int main(int /*argc*/, char** /*argv*/)
   UNUSED(softening);
   UNUSED(G);
 
+  ///////////////////////////////////////////
+  // Creating GLFW Window Section
+  if (glfwInit() != GLFW_TRUE) {
+    std::exit(-1);
+  }
+
+  // setting window hints
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_RESIZABLE, false);
+  glfwWindowHint(GLFW_SAMPLES, 4); // Anti-aliasing
+
+  // glfwcreateWindow(width, height, title, monitor, share)
+  GLFWwindow* window = glfwCreateWindow(width, height, "NBodySimulator", nullptr, nullptr);
+  glfwMakeContextCurrent(window);
+  // Disable vsync
+  glfwSwapInterval(0);
+
+  // Loading all function pointers for OpenGL
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::exit(-1);
+  }
+
+  glEnable(GL_MULTISAMPLE); // Turning anti-aliasing on
+
+  ///////////////////////////////////////////
+  //// IMGUI SECTION
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImPlot::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+  io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+  UNUSED(io);
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 410");
+
+  //////////////////////////////////////////
+
   // total mass of particles is 20?
-  constexpr const float initialMass = 20.0f * 1.0f / float(N);
+  constexpr const float initialMass = 10.0f * 1.0f / float(N);
   Eigen::VectorXf mass = initialMass * Eigen::VectorXf::Ones(N);
 
   // fills pos with random numbers between -1 and 1
@@ -177,6 +255,28 @@ int main(int /*argc*/, char** /*argv*/)
 
   // simulation loop
   for (int i = 0; i < Nt; i++) {
+    glfwPollEvents();
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Displaying the UI Window
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+
+    ImGui::NewFrame();
+    {
+      ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(),
+                                   ImGuiDockNodeFlags_NoSplit | ImGuiDockNodeFlags_NoResize);
+
+      ImGui::Begin("NBody Simulation Visualization");
+      drawScatter(pos);
+      ImGui::End();
+    }
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(window);
+
     // 1/2 kick (idk what this means)
     vel += acc * dt / 2.0;
 
@@ -194,20 +294,16 @@ int main(int /*argc*/, char** /*argv*/)
 
     // get energy of system
     auto [sKE, sPE] = getEnergy(pos, vel, mass, G);
-
-    // save energies, positions for plotting trail
-    recordPosAtTime(pos_save, pos, i + 1);
-    KEPE_save[i + 1] = std::make_pair(sKE, sPE);
-
-    // plotting/visualization section in loop
-    // hehe :)
+    UNUSED(sKE);
+    UNUSED(sPE);
   }
 
-  std::ofstream outputKEPE("output_KEPE.bin");
-  for (const auto [KEVal, PEVal] : KEPE_save) {
-    outputKEPE << KEVal << "\t" << PEVal << "\t" << KEVal + PEVal << std::endl;
-  }
-  outputKEPE.close();
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImPlot::DestroyContext();
+  ImGui::DestroyContext();
+
+  glfwTerminate();
 
   return 0;
 }
