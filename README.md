@@ -1,4 +1,6 @@
 # NBodySimulator
+A C++ implementation of the gravitational N-Body Problem that simulates and visualizes a dynamical system of 
+particles interacting gravitationally using C++, Eigen, ImGui, ImPlot, and GLFW 
 
 # How to build and run
 
